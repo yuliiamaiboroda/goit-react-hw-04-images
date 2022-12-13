@@ -1,4 +1,4 @@
-import React, { useEffect , useState } from "react";
+import React, { useEffect , useState, useCallback } from "react";
 import Searchbar from "./Searchbar/Searchbar";
 import ImageGalleryItem from "./ImageGalleryItem/ImageGalleryItem";
 import ImageGallery from "./ImageGallery/ImageGallery";
@@ -17,7 +17,6 @@ const STATUSES = {
 };
 
 
-
 export const App = () => {
 
 const [query, setQuery]= useState(null);
@@ -27,31 +26,29 @@ const [images, setImages] = useState([]);
 const [status, setStatus] = useState(false);
 const methods = useApi();
 
+const fetchGallary = useCallback(async () => {
+  setStatus(STATUSES.PENDING);
+  await methods
+    .fetchImages(query, page).then(({data}) => {
+      setImages(images=>[...images, ...data.hits]);
+      setStatus(STATUSES.SUCCESS);
 
+      if(!data.hits.length){
+          Notify.failure(`Ooops, there are no images when searching for ${query}`);
+          setStatus(STATUSES.ERROR);}
+
+    }).catch(err=>{ setStatus(STATUSES.ERROR);
+          console.log(err);});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [query, page])
 
 useEffect(()=>{
-  const getImagesArr = async() =>{
-    setStatus(STATUSES.PENDING)
-    try {
-      const {data} = await methods.fetchImages(query, page);
-      setStatus(STATUSES.SUCCESS);
-      setImages(images=>[...images, ...data.hits]);
-      
-      if(!data.hits.length){
-          Notify.failure(`Ooops, there are no images when searching for ${query}`)
-          setStatus(STATUSES.ERROR)
-
-    }}
-    catch(err){
-      setStatus(STATUSES.ERROR)
-      console.log(err);
-    }
-  };
   if (!query){
     return;
-  }else{getImagesArr()} 
+  }
+  fetchGallary() 
 
-}, [query, page ])
+}, [query, fetchGallary])
 
 
 const closeModal = () => {
@@ -62,10 +59,12 @@ const loadMore = () => {
   setPages(page=>page + 1);
 };
 
-const onSubmit = (query) =>{
-  setQuery(query);
+const onSubmit = (imgName) =>{
+  if(query!==imgName){
+  setQuery(imgName);
   setPages(1);
   setImages([])
+  }
 }
 
 return(
@@ -76,13 +75,13 @@ return(
         <ImageGallery>
         <ImageGalleryItem images={images} onClickOnImage={setcurrentImage}/>
         </ImageGallery>
-       { <Button text="Load more" handleClick={loadMore} />}
+       <Button text="Load more" handleClick={loadMore} />
           {currentImage && (
                   <Modal currentImage={currentImage} closeModal={closeModal} />
                 )}</Section>)}
 
 
-      {status==='PENDING'&&(<><ColorRing
+      {status===STATUSES.PENDING&&(<><ColorRing
       visible={true}
       height="100"
       width="100"

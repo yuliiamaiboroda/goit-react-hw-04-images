@@ -1,35 +1,34 @@
-import React, { Component } from "react";
 import { createPortal } from "react-dom";
 import { Backdrop, ModalContent, Img } from "./Modal.styled";
 import PropTypes from 'prop-types';
+import { useEffect } from "react";
 
 const modalRoot = document.querySelector("#modal-root");
 
-export default class Modal extends Component {
-  closeByEsc = (e) => {
+export default function  Modal ({closeModal ,currentImage: { largeImageURL, tags }}) {
+useEffect(()=>{
+
+    const closeByEsc = (e) => {
     if (e.code === "Escape") {
-      this.props.closeModal();
+      closeModal();
     }
-  };
+    };
 
-  componentDidMount() {
-    window.addEventListener("keydown", this.closeByEsc);
-  }
-  componentWillUnmount() {
-    window.removeEventListener("keydown", this.closeByEsc);
-  }
+    window.addEventListener("keydown", closeByEsc);
+    
+    return ()=>{window.removeEventListener("keydown", closeByEsc)} },
+          [closeModal]);
+ 
 
-  handleBackdropClick= e =>{
+const   handleBackdropClick= e =>{
     if(e.currentTarget===e.target){
-        this.props.closeModal()
+       closeModal()
     }
   }
-  render() {
-    const {
-      currentImage: { largeImageURL, tags },
-    } = this.props;
+ 
+   
     return createPortal(
-      <Backdrop onClick={this.handleBackdropClick}>
+      <Backdrop onClick={handleBackdropClick}>
         <ModalContent>
           <Img src={largeImageURL} alt={tags} />
         </ModalContent>
@@ -37,7 +36,7 @@ export default class Modal extends Component {
       modalRoot,
     );
   }
-}
+
 
 Modal.propTypes = {
   currentImage: PropTypes.shape({

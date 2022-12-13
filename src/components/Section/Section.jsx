@@ -1,19 +1,15 @@
-import { Component } from "react";
 import {  SectionTag } from "./Section.styled";
 import PropTypes from 'prop-types';
 
 
-class Section extends Component {
-    render(){
+export default function Section  ({children}) {
         return(
             <SectionTag>
-                
-                {this.props.children}
+               {children}
             </SectionTag>
         )
-    }
 }
-export default Section;
+
 
 Section.propTypes={
 children: PropTypes.node.isRequired
